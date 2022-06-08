@@ -64,15 +64,17 @@ class MJCFBuilder:
 
     def build_mjcf(self) -> None:
         root = self.tree.getroot()
-
+        mesh_dir = os.path.dirname(self.file_path)
         for ele1 in root:
+            if ele1.tag == 'compiler' and ele1.attrib.get('meshdir') is not None:
+                mesh_dir = ele1.attrib['meshdir']
             if ele1.tag == 'asset':
                 for ele2 in ele1:
                     if ele2.tag == 'mesh':
                         self.remove_meshes[ele2.attrib['name']] = ele2.attrib['file']
 
         for mesh_name in self.remove_meshes:
-            mesh_path = os.path.join(os.path.dirname(self.file_path), self.remove_meshes[mesh_name])
+            mesh_path = os.path.join(mesh_dir, self.remove_meshes[mesh_name])
             bpy.ops.import_scene.obj(filepath=mesh_path)
 
             bpy.ops.object.select_all(action='DESELECT')
@@ -88,7 +90,7 @@ class MJCFBuilder:
                 new_mesh_path = os.path.join(os.path.dirname(mesh_path), file_name)
                 bpy.ops.export_mesh.stl(filepath=new_mesh_path, use_selection=True)
                 object.select_set(False)
-                new_mesh[mesh_name + str(i)] = os.path.join(os.path.dirname(self.remove_meshes[mesh_name]), file_name)
+                new_mesh[mesh_name + str(i)] = new_mesh_path
                 i += 1
 
             self.add_meshes[mesh_name] = new_mesh
@@ -119,6 +121,6 @@ class MJCFBuilder:
         return None
 
 if __name__ == '__main__':
-    file_in = '/home/giang/tmp/iai_kitchen/iai_kitchen_python.xml'
-    file_out = '/home/giang/tmp/iai_kitchen/iai_kitchen_python_out.xml'
+    file_in = '/home/giang/Workspace/mujoco_ws/src/mujoco_world/mujoco_world/model/iai_kitchen_python.xml'
+    file_out = '/home/giang/Workspace/mujoco_ws/src/mujoco_world/mujoco_world/model/iai_kitchen_python.xml'
     MJCFBuilder(file_in, file_out)
